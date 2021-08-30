@@ -1,6 +1,10 @@
 const iq = require('inquirer')
 const fs = require('fs')
 const util = require('util')
+const Engineer = require('./lib/Engineer')
+const Manager = require('./lib/Manager')
+const Intern = require('./lib/Intern')
+const generateHTML = require('./src/generateHTML')
 
 const initPrompt = [{
     type: 'input',
@@ -52,12 +56,44 @@ const teamPrompt = [{
         let validate = 'Intern'
         return answers.memberSelect && answers.memberSelect.includes(validate)
     }
+},{
+    type: 'confirm',
+    name: 'addMore',
+    message: 'would you like to add anothter team member?'
 }]
 
-//function to initialize the application
-function init(){
-    const promptFinished = 
-    iq.prompt(initPrompt)
+var teamArray = []
+
+const nextPrompt = async () => {
+    const res = await iq.prompt(teamPrompt)
+    if(res.memberSelect === 'Engineer'){
+        const engi = new Engineer (res.name, res.id, res.email, res.memberSelect, res.git)
+        teamArray.push(engi)
+    } else if(res.memberSelect === 'Intern'){
+        const intern = new Intern (res.name, res.id, res.email, res.memberSelect, res.school)
+        teamArray.push(intern)}
+
+    if(res.addMore){
+        nextPrompt();
+        }
+        else{
+            console.log('no new members')
+            console.log(teamArray)
+            generateHTML(teamArray)
+            return
+        }
 }
 
-init();
+//function to initialize the application
+const init = async () => {
+    const res = await iq.prompt(initPrompt)
+    const manager = new Manager (res.managerName, res.managerID, res.managerEmail, 'Manager', res.officeNumber)
+    teamArray.push(manager)
+
+    nextPrompt();
+}
+
+
+
+init()
+
